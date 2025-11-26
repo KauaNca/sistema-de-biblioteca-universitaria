@@ -22,7 +22,7 @@ export default function InnerLayout({ title, children, extra }) {
           alignItems: "center",
         }}
       >
-        <h2 style={{ margin: 0, color: "black" }}>{title}</h2>
+        <p className="text-lg font-bold">{title}</p>
         {extra}
       </Header>
 

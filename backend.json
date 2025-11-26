@@ -1,0 +1,92 @@
+{
+    "autores": [
+      {
+        "id": 1,
+        "nome": "Thomas H. Cormen",
+        "nacionalidade": "Americano",
+        "dataNascimento": "1956-01-01"
+      },
+      {
+        "id": 2,
+        "nome": "Silberschatz",
+        "nacionalidade": "Indiano",
+        "dataNascimento": "1952-05-15"
+      }
+    ],
+    "livros": [
+      {
+        "id": 1,
+        "titulo": "Estruturas de Dados",
+        "ano": 2020,
+        "isbn": "978-3-16-148410-0",
+        "categoria": "Computação",
+        "autorId": 1
+      },
+      {
+        "id": 2,
+        "titulo": "Banco de Dados Moderno",
+        "ano": 2018,
+        "isbn": "978-0-13-397077-7",
+        "categoria": "Tecnologia",
+        "autorId": 2
+      }
+    ],
+    "alunos": [
+      {
+        "id": 101,
+        "nome": "Maria Silva",
+        "matricula": "202300123",
+        "curso": "Engenharia da Computação"
+      },
+      {
+        "id": 102,
+        "nome": "João Pedro",
+        "matricula": "202300987",
+        "curso": "Direito"
+      }
+    ],
+    "emprestimos": [
+      {
+        "id": 500,
+        "alunoId": 101,
+        "livroId": 1,
+        "dataEmprestimo": "2025-03-10",
+        "dataDevolucao": null
+      },
+      {
+        "id": 501,
+        "alunoId": 101,
+        "livroId": 2,
+        "dataEmprestimo": "2025-03-25",
+        "dataDevolucao": "2025-04-10"
+      }
+    ],
+    "relatorios": {
+      "livrosEmprestadosPorAluno": {
+        "alunoId": 101,
+        "aluno": {
+          "id": 101,
+          "nome": "Maria Silva",
+          "matricula": "202300123",
+          "curso": "Engenharia da Computação"
+        },
+        "emprestimos": [
+          {
+            "livroId": 1,
+            "titulo": "Estruturas de Dados",
+            "autor": "Thomas H. Cormen",
+            "dataEmprestimo": "2025-03-10",
+            "dataDevolucao": null
+          },
+          {
+            "livroId": 2,
+            "titulo": "Banco de Dados Moderno",
+            "autor": "Silberschatz",
+            "dataEmprestimo": "2025-03-25",
+            "dataDevolucao": "2025-04-10"
+          }
+        ]
+      }
+    }
+  }
+  
