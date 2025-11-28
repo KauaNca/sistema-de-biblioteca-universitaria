@@ -1,10 +1,25 @@
-import { Table, Button } from "antd";
+import { Table, Button, Modal } from "antd";
 import InnerLayout from "../components/InnerLayout";
 import AutoresDAO from "../daos/AutoresDAO.mjs";
 import { useEffect, useState } from "react";
+import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import Caixa from "../components/Caixa.jsx";
 
 export default function Autores() {
   const [data, setData] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const showModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleOk = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleCancel = () => {
+    setIsModalOpen(false);
+  };
 
   useEffect(() => {
     const autores = new AutoresDAO();
@@ -27,16 +42,18 @@ export default function Autores() {
       title: "Ações",
       render: () => (
         <>
-          <Button type="link">Editar</Button>
+          <Button type="link">
+            <EditOutlined />
+            Editar
+          </Button>
           <Button type="link" danger>
-            Excluir
+            <DeleteOutlined /> Excluir
           </Button>
         </>
       ),
     },
   ];
 
-  // Botão personalizado conforme seu JSON
   const CustomButton = () => (
     <Button
       style={{
@@ -45,9 +62,9 @@ export default function Autores() {
         borderRadius: "5px",
         padding: "10px 20px",
       }}
-      onClick={() => alert("Enviar clicado!")}
+      onClick={showModal} // Corrigido: apenas chama showModal
     >
-      Enviar
+      Novo
     </Button>
   );
 
@@ -58,6 +75,14 @@ export default function Autores() {
         dataSource={data}
         locale={{ emptyText: "Nenhum autor cadastrado" }}
         rowKey="id"
+      />
+      
+      {/* Renderiza o modal como componente JSX */}
+      <Caixa 
+        isModalOpen={isModalOpen} 
+        handleOk={handleOk} 
+        handleCancel={handleCancel} 
+        tipo={1}
       />
     </InnerLayout>
   );
