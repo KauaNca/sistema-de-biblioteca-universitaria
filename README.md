@@ -22,7 +22,7 @@ Este projeto consiste no desenvolvimento de um **sistema web completo** para ger
 ---
 
 ## 📁 Estrutura de Pastas
-
+```txt
 📦 projeto
 ┣ 📂 frontend
 │ ┣ 📂 src
@@ -37,7 +37,7 @@ Este projeto consiste no desenvolvimento de um **sistema web completo** para ger
 ┣ 📂 controllers # Lógica e regras de negócio
 ┣ 📂 routes # Rotas da API REST
 ┗ server.js # Servidor Express
-
+```
 ---
 
 ## 🎯 Objetivo do Projeto
