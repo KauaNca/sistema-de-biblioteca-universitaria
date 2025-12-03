@@ -6,7 +6,8 @@ import {
   MenuOutlined,
   ReadOutlined,
   TeamOutlined,
-  BarChartOutlined
+  BarChartOutlined,
+  UserOutlined
 } from "@ant-design/icons";
 
 
