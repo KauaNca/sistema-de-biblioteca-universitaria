@@ -31,7 +31,11 @@ export default class LivrosDAO {
   // 🔥 Gera um ISBN automaticamente
   gerarISBN() {
     // Exemplo: "ISBN-3ks9d82kf0S"
-    return "ISBN-" + Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
+    return (
+      "ISBN-" +
+      Date.now().toString(36) +
+      Math.random().toString(36).substring(2, 8)
+    );
   }
 
   // 🔹 Converte o objeto Livros para JSON salvo
@@ -54,6 +58,14 @@ export default class LivrosDAO {
     console.log(livros);
     try {
       const lista = await this.carregarLivros();
+      if (lista.find((l) => l.titulo === livros.getTitulo())) {
+        console.error("Título já existe!");
+        return false;
+      }
+      if(lista.find((l) => l.isbn === livros.getISBN())) {
+        console.error("ISBN já existe!");
+        return false;
+      }
       const livroObj = this.arrumarLivros(livros);
 
       if (!livroObj) {

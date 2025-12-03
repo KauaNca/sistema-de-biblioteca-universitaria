@@ -46,6 +46,10 @@ export default class AutoresDAO {
     console.log(autores);
     try {
       const lista = await this.carregarAutores();
+      if (lista.find((a) => a.nome === autores.getNome())) {
+        console.error("Nome já existe!");
+        return false;
+      }
       const objeto = this.arrumarAutores(autores);
 
       if (!objeto) {

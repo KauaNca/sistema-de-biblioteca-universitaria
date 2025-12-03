@@ -1,13 +1,12 @@
 // Caixa.jsx
 import React from "react";
-import { Modal, Form, Input, Select } from "antd";
+import { Modal, Form, Input, Select, message } from "antd";
 import Autores from "../objetos/Autores.mjs";
 import AutoresDAO from "../daos/AutoresDAO.mjs";
 import Livros from "../objetos/Livros.mjs";
 import LivrosDAO from "../daos/LivrosDAO.mjs";
 import Aluno from "../objetos/Aluno.mjs";
 import AlunosDAO from "../daos/AlunosDAO.mjs";
-import Emprestimo from "../objetos/Emprestimo.mjs";
 import EmprestimoDAO from "../daos/EmprestimoDAO.mjs";
 import CaixaSeletora from "./CaixaSeletora";
 
@@ -65,7 +64,6 @@ function Caixa({ isModalOpen, handleOk, handleCancel, tipo, dados }) {
     } else if (dados && tipo === 3) {
       form.setFieldsValue({
         nomeAluno: dados.nome,
-        matricula: dados.matricula,
         curso: dados.curso,
         email: dados.email,
         telefone: dados.telefone,
@@ -126,7 +124,11 @@ function Caixa({ isModalOpen, handleOk, handleCancel, tipo, dados }) {
           novoAutor.setNome(values.nome);
           novoAutor.setNacionalidade(values.nacionalidade);
           novoAutor.setBiografia(values.biografia);
-          await autoresDAO.salvarAutores(novoAutor);
+          const resposta = await autoresDAO.salvarAutores(novoAutor);
+          if (!resposta) {
+            message.error("Falha ao salvar autor (Autor pode já existir)");
+            return;
+          }
         }
       }
 
@@ -141,10 +143,15 @@ function Caixa({ isModalOpen, handleOk, handleCancel, tipo, dados }) {
           const novoLivro = new Livros();
           novoLivro.setTitulo(values.titulo);
           novoLivro.setAno(values.ano);
-          // NÃO setamos ISBN aqui (será gerado no salvar)
           novoLivro.setCategoria(values.categoria);
           novoLivro.setAutorId(values.autorId || null);
-          await livrosDAO.salvarLivros(novoLivro);
+          const resposta = await livrosDAO.salvarLivros(novoLivro);
+          if (!resposta) {
+            message.error(
+              "Falha ao salvar livro (Título ou ISBN pode já existir)"
+            );
+            return;
+          }
         }
       }
 
@@ -154,15 +161,20 @@ function Caixa({ isModalOpen, handleOk, handleCancel, tipo, dados }) {
           editarAluno(values);
         } else {
           const novoAluno = new Aluno();
-          // campos do formulário de aluno: nomeAluno, matricula, curso, email, telefone
+          // campos do formulário de aluno: nomeAluno, curso, email, telefone
           novoAluno.setNome(values.nomeAluno);
-          if (values.matricula) novoAluno.setMatricula(values.matricula);
           if (values.curso) novoAluno.setCurso(values.curso);
           if (values.email) novoAluno.setEmail(values.email);
           if (values.telefone) novoAluno.setTelefone(values.telefone);
 
           const alunosDAO = new AlunosDAO();
-          await alunosDAO.salvarAluno(novoAluno);
+          const resposta = await alunosDAO.salvarAluno(novoAluno);
+          if (!resposta) {
+            message.error(
+              "Falha ao salvar aluno (nome ou matrícula podem já existir)"
+            );
+            return;
+          }
         }
       }
       // EMPRÉSTIMO (tipo 4)
@@ -338,11 +350,6 @@ function Caixa({ isModalOpen, handleOk, handleCancel, tipo, dados }) {
           >
             <Input placeholder="Digite o nome completo do aluno" />
           </Form.Item>
-
-          <Form.Item label="Matrícula" name="matricula">
-            <Input placeholder="Número de matrícula" />
-          </Form.Item>
-
           <Form.Item
             label="Curso"
             name="curso"

@@ -109,8 +109,7 @@ function Emprestimo() {
 
   return (
     <div className="max-w-full bg-white p-6 rounded-lg shadow-md">
-      <div className="flex flex-row justify-between p-4">
-        <p className="text-lg font-bold">Empréstimo</p>
+      <div className="flex flex-row justify-end p-4">
         <Button className="self-end" onClick={novoEmprestimo}>
           Novo empréstimo
         </Button>

@@ -68,6 +68,14 @@ export default class AlunoDAO {
   async salvarAluno(aluno) {
     try {
       const listaAluno = await this.carregarAlunos();
+      if (listaAluno.find((a) => a.nome === aluno.getNome())) {
+        console.error("Nome já existe!");
+        return false;
+      }
+      if (listaAluno.find((a) => a.matricula === aluno.getMatricula())) {
+        console.error("Matricula já existe!");
+        return false;
+      }
       const objeto = this.arrumarAluno(aluno);
 
       if (!objeto) {
