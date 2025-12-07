@@ -11,7 +11,7 @@ function Rotas(){
     return(
         <Routes>
             <Route path='/' element={<MainLayout/>}>
-                <Route index element={<Navigate to="/livros" />} />
+                <Route index element={<Navigate to="livros" />} />
                 <Route path='livros' element={<Livros/>} />
                 <Route path='autores' element={<Autores/>} />
                 <Route path='emprestimo' element={<Emprestimo/>} />
