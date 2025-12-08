@@ -13,10 +13,11 @@ export default function Livros() {
   const [livroSelecionado, setLivroSelecionado] = useState(null);
   const [modoEdicao, setModoEdicao] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { useBreakpoint } = Grid; //ANTD disponibiliza o hook useBreakpoint para detectar breakpoints
+
+  const { useBreakpoint } = Grid;
   const screens = useBreakpoint();
 
-  // Carregar autores para exibir o nome no lugar do autorId
+  // Carregar autores
   const carregarAutores = useCallback(async () => {
     const autoresDAO = new AutoresDAO();
     const lista = await autoresDAO.carregarAutores();
@@ -25,6 +26,7 @@ export default function Livros() {
     lista.forEach((a) => {
       mapa[a.id] = a.nome;
     });
+
     setAutoresMap(mapa);
   }, []);
 
@@ -101,6 +103,9 @@ export default function Livros() {
     excluirLivro(id);
   };
 
+  // -------------------------
+  // COLUNAS (todas visíveis + scroll horizontal)
+  // -------------------------
   const columns = [
     {
       title: "Título",
@@ -111,14 +116,12 @@ export default function Livros() {
       title: "Ano",
       dataIndex: "ano",
       key: "ano",
-      responsive: ["md"],
     },
     {
       title: "ISBN",
       dataIndex: "isbn",
       key: "isbn",
       render: (isbn) => <span>{isbn || "-"}</span>,
-      responsive: ["md"],
     },
     {
       title: "Categoria",
@@ -130,14 +133,13 @@ export default function Livros() {
       dataIndex: "autorId",
       key: "autorId",
       render: (autorId) => autoresMap[autorId] || "Autor não encontrado",
-      responsive: ["md"],
     },
-
     {
       title: "Ações",
       key: "acoes",
+      fixed: screens.xs ? false : "right",
       render: (_, record) => (
-        <Space orientation={screens.xs ? "vertical" : "horizontal"}>
+        <Space direction={screens.xs ? "vertical" : "horizontal"}>
           <Button
             type="primary"
             icon={<EditOutlined />}
@@ -145,6 +147,7 @@ export default function Livros() {
           >
             Editar
           </Button>
+
           <Popconfirm
             title="Excluir Livro"
             description="Tem certeza que deseja excluir este livro?"
@@ -179,7 +182,7 @@ export default function Livros() {
       }}
       onClick={() => showModal()}
     >
-     {screens.xs ? "Novo" : "Novo Livro"}
+      {screens.xs ? "Novo" : "Novo Livro"}
     </Button>
   );
 
@@ -191,15 +194,14 @@ export default function Livros() {
         locale={{ emptyText: "Nenhum livro cadastrado" }}
         rowKey="id"
         loading={loading}
+        scroll={{ x: "max-content" }} // ← mantém todas colunas visíveis
         pagination={{
-          pageSize: screens.xs ? 5 : 10, // Menos itens por página em telas pequenas
-          showSizeChanger: !screens.xs && !screens.sm, // Sem opção de mudar tamanho em xs e sm
-          showQuickJumper: !screens.xs, // Sem quick jumper em xs
-          size: screens.xs ? "small" : "default", //tamanho da paginação
-          showTotal: (
-            total,
-            range //total = número total de itens na lista || range = array com o intervalo atual [início, fim]. Eles recebem esses parâmetros automaticamente
-          ) => `${range[0]}-${range[1]} de ${total} livros`,
+          pageSize: screens.xs ? 5 : 10,
+          showSizeChanger: !screens.xs && !screens.sm,
+          showQuickJumper: !screens.xs,
+          size: screens.xs ? "small" : "default",
+          showTotal: (total, range) =>
+            `${range[0]}-${range[1]} de ${total} livros`,
         }}
         onRow={(record) => ({
           onClick: () => {
@@ -213,7 +215,7 @@ export default function Livros() {
         handleOk={handleOk}
         handleCancel={handleCancel}
         dados={livroSelecionado}
-        tipo={2} // <- IMPORTANTE: diz ao Caixa que este é o formulário de livros
+        tipo={2}
       />
     </InnerLayout>
   );
