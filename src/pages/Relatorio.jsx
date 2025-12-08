@@ -73,8 +73,8 @@ export default function Relatorio() {
               dataKey="nome"
               label={{
                 value: "Categorias",
-                position: "insideRight",
-                offset: -4,
+                position: "insideBottomRight",
+                offset: -2,
                 style: { fontSize: 12, marginBottom: 10},
               }}
             />
