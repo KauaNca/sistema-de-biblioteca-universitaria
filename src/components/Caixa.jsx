@@ -1,14 +1,15 @@
 // Caixa.jsx
 import React from "react";
 import { Modal, Form, Input, Select, message } from "antd";
+import AutoresDAOHibrido from "../daos/AutoresDAOHibrido.mjs";
 import Autores from "../objetos/Autores.mjs";
-import AutoresDAO from "../daos/AutoresDAO.mjs";
 import Livros from "../objetos/Livros.mjs";
-import LivrosDAO from "../daos/LivrosDAO.mjs";
+import LivrosDAOHibrido from "../daos/LivrosDAOHibrido.mjs";
 import Aluno from "../objetos/Aluno.mjs";
-import AlunosDAO from "../daos/AlunosDAO.mjs";
-import EmprestimoDAO from "../daos/EmprestimoDAO.mjs";
+import AlunosDAOHibrido from "../daos/AlunoDAOHibrido.mjs";
+import EmprestimosDAOHibrido from "../daos/EmprestimosDAOHibrido.mjs";
 import CaixaSeletora from "./CaixaSeletora";
+import Emprestimo from "../objetos/Emprestimo.mjs";
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -22,10 +23,10 @@ function Caixa({ isModalOpen, handleOk, handleCancel, tipo, dados }) {
   // Função de máscara para telefone
   const aplicarMascaraTelefone = (value) => {
     if (!value) return "";
-    
+
     // Remove tudo que não é número
     const apenasNumeros = value.replace(/\D/g, "");
-    
+
     // Aplica a máscara baseada no tamanho
     if (apenasNumeros.length <= 10) {
       // Formato: (00) 0000-0000
@@ -45,11 +46,19 @@ function Caixa({ isModalOpen, handleOk, handleCancel, tipo, dados }) {
   // Função de máscara para ano (limita a 4 dígitos)
   const aplicarMascaraAno = (value) => {
     if (!value) return "";
-    
+
     // Remove tudo que não é número e limita a 4 dígitos
     const apenasNumeros = value.replace(/\D/g, "").slice(0, 4);
     return apenasNumeros;
   };
+
+  function gerarMatriculaSimples() {
+    const prefixo = "2024"; // Ano base
+    const numero = Math.floor(Math.random() * 10000)
+      .toString()
+      .padStart(4, "0");
+    return prefixo + numero;
+  }
 
   // Handler para formatar telefone enquanto digita
   const handleTelefoneChange = (e) => {
@@ -64,18 +73,18 @@ function Caixa({ isModalOpen, handleOk, handleCancel, tipo, dados }) {
   };
 
   async function buscarAlunos() {
-    const alunos = await new AlunosDAO().carregarAlunos();
+    const alunos = await new AlunosDAOHibrido().carregarAlunos();
     return alunos || [];
   }
   async function buscarLivros() {
-    const livros = new LivrosDAO().carregarLivros();
+    const livros = new LivrosDAOHibrido().carregarLivros();
     return livros || [];
   }
 
   // Carrega autores quando o modal abre para tipo === 2 (formulário de livro)
   React.useEffect(() => {
     if (tipo === 2) {
-      const autoresDAO = new AutoresDAO();
+      const autoresDAO = new AutoresDAOHibrido();
       autoresDAO.carregarAutores().then((lista) => {
         // lista já é array de objetos salvos (id, nome, ...)
         setAutores(Array.isArray(lista) ? lista : []);
@@ -107,7 +116,9 @@ function Caixa({ isModalOpen, handleOk, handleCancel, tipo, dados }) {
       });
     } else if (dados && tipo === 3) {
       // Aplica a máscara no telefone ao preencher os dados
-      const telefoneFormatado = dados.telefone ? aplicarMascaraTelefone(dados.telefone) : "";
+      const telefoneFormatado = dados.telefone
+        ? aplicarMascaraTelefone(dados.telefone)
+        : "";
       form.setFieldsValue({
         nomeAluno: dados.nome,
         curso: dados.curso,
@@ -123,7 +134,7 @@ function Caixa({ isModalOpen, handleOk, handleCancel, tipo, dados }) {
   // ---------- CRUD / helpers ----------
   function editarAutor(values) {
     if (!dados) return;
-    const autoresDAO = new AutoresDAO();
+    const autoresDAO = new AutoresDAOHibrido();
     autoresDAO.atualizarAutores(dados.id, values).then((ok) => {
       if (!ok) console.error("Falha ao atualizar autor");
     });
@@ -131,7 +142,7 @@ function Caixa({ isModalOpen, handleOk, handleCancel, tipo, dados }) {
 
   function editarLivro(values) {
     if (!dados) return;
-    const livrosDAO = new LivrosDAO();
+    const livrosDAO = new LivrosDAOHibrido();
     // Monta um objeto Livros a partir dos valores do formulário
     const livro = new Livros();
     livro.setLivroId(dados.id); // garante ID correto
@@ -147,11 +158,11 @@ function Caixa({ isModalOpen, handleOk, handleCancel, tipo, dados }) {
 
   function editarAluno(values) {
     if (!dados) return;
-    const alunosDAO = new AlunosDAO();
+    const alunosDAO = new AlunosDAOHibrido();
     // Remove a máscara do telefone antes de salvar
     const dadosParaSalvar = {
       ...values,
-      telefone: values.telefone ? values.telefone.replace(/\D/g, "") : ""
+      telefone: values.telefone ? values.telefone.replace(/\D/g, "") : "",
     };
     alunosDAO.atualizarAluno(dados.id, dadosParaSalvar).then((ok) => {
       if (!ok) console.error("Falha ao atualizar aluno");
@@ -169,13 +180,13 @@ function Caixa({ isModalOpen, handleOk, handleCancel, tipo, dados }) {
         } else {
           // criação
           const novoAutor = new Autores();
-          const autoresDAO = new AutoresDAO();
-          const autorId = autoresDAO.gerarIdAutor();
-          novoAutor.setAutorId(autorId);
+          const autoresDAO = new AutoresDAOHibrido();
+          // const autorId = autoresDAO.gerarIdAutor();
+          // novoAutor.setAutorId(autorId);
           novoAutor.setNome(values.nome);
           novoAutor.setNacionalidade(values.nacionalidade);
           novoAutor.setBiografia(values.biografia);
-          const resposta = await autoresDAO.salvarAutores(novoAutor);
+          const resposta = await autoresDAO.salvarAutor(novoAutor);
           if (!resposta) {
             message.error("Falha ao salvar autor (Autor pode já existir)");
             return;
@@ -185,7 +196,7 @@ function Caixa({ isModalOpen, handleOk, handleCancel, tipo, dados }) {
 
       // LIVRO (tipo 2) - ISBN gerado automaticamente no DAO
       if (tipo === 2) {
-        const livrosDAO = new LivrosDAO();
+        const livrosDAO = new LivrosDAOHibrido();
         if (dados) {
           // edição
           editarLivro(values);
@@ -196,7 +207,7 @@ function Caixa({ isModalOpen, handleOk, handleCancel, tipo, dados }) {
           novoLivro.setAno(values.ano);
           novoLivro.setCategoria(values.categoria);
           novoLivro.setAutorId(values.autorId || null);
-          const resposta = await livrosDAO.salvarLivros(novoLivro);
+          const resposta = await livrosDAO.salvarLivro(novoLivro);
           if (!resposta) {
             message.error(
               "Falha ao salvar livro (Título ou ISBN pode já existir)"
@@ -212,21 +223,24 @@ function Caixa({ isModalOpen, handleOk, handleCancel, tipo, dados }) {
           // Remove a máscara do telefone antes de editar
           const valoresEditados = {
             ...values,
-            telefone: values.telefone ? values.telefone.replace(/\D/g, "") : ""
+            telefone: values.telefone ? values.telefone.replace(/\D/g, "") : "",
           };
           editarAluno(valoresEditados);
         } else {
           const novoAluno = new Aluno();
           // Remove a máscara do telefone antes de salvar
-          const telefoneLimpo = values.telefone ? values.telefone.replace(/\D/g, "") : "";
-          
+          const telefoneLimpo = values.telefone
+            ? values.telefone.replace(/\D/g, "")
+            : "";
+
           // campos do formulário de aluno: nomeAluno, curso, email, telefone
           novoAluno.setNome(values.nomeAluno);
+          novoAluno.setMatricula(gerarMatriculaSimples());
           if (values.curso) novoAluno.setCurso(values.curso);
           if (values.email) novoAluno.setEmail(values.email);
           if (telefoneLimpo) novoAluno.setTelefone(telefoneLimpo);
 
-          const alunosDAO = new AlunosDAO();
+          const alunosDAO = new AlunosDAOHibrido();
           const resposta = await alunosDAO.salvarAluno(novoAluno);
           if (!resposta) {
             message.error(
@@ -237,10 +251,42 @@ function Caixa({ isModalOpen, handleOk, handleCancel, tipo, dados }) {
         }
       }
       // EMPRÉSTIMO (tipo 4)
+      // Dentro do onFinish, na parte do tipo 4, substituir por:
       if (tipo === 4) {
-        const emprestimoDAO = new EmprestimoDAO();
-        console.log("Valores do formulário de empréstimo:", values);
-        emprestimoDAO.salvarEmprestimo(values);
+        try {
+          const emprestimoDAO = new EmprestimosDAOHibrido();
+
+          // Debug: verificar o que está sendo enviado
+          console.log("Dados do formulário de empréstimo:", values);
+
+          // Criar empréstimo no formato correto
+          const dadosEmprestimo = {
+            alunosSelecionados: values.alunosSelecionados,
+            livrosSelecionados: values.livrosSelecionados,
+          };
+
+          console.log("Dados para salvar:", dadosEmprestimo);
+
+          // Salvar e aguardar resposta
+          const resultado = await emprestimoDAO.salvarEmprestimo(
+            dadosEmprestimo
+          );
+
+          console.log("Resultado do salvamento:", resultado);
+
+          if (resultado) {
+            message.success("Empréstimo registrado com sucesso!");
+            // fecha modal e reseta formulário
+            form.resetFields();
+            handleOk();
+          } else {
+            message.error("Falha ao salvar empréstimo");
+          }
+        } catch (error) {
+          console.error("Erro ao salvar empréstimo:", error);
+          message.error("Erro ao registrar empréstimo: " + error.message);
+        }
+        return; // Importante: sair da função após tratar tipo 4
       }
 
       // fecha modal e reseta formulário
@@ -353,9 +399,9 @@ function Caixa({ isModalOpen, handleOk, handleCancel, tipo, dados }) {
               },
             ]}
           >
-            <Input 
-              type="text" 
-              placeholder="Ex: 2020" 
+            <Input
+              type="text"
+              placeholder="Ex: 2020"
               onChange={handleAnoChange}
               maxLength={4}
             />
@@ -449,8 +495,8 @@ function Caixa({ isModalOpen, handleOk, handleCancel, tipo, dados }) {
             <Input placeholder="exemplo@email.com" />
           </Form.Item>
 
-          <Form.Item 
-            label="Telefone" 
+          <Form.Item
+            label="Telefone"
             name="telefone"
             rules={[
               {
@@ -459,8 +505,8 @@ function Caixa({ isModalOpen, handleOk, handleCancel, tipo, dados }) {
               },
             ]}
           >
-            <Input 
-              placeholder="(00) 00000-0000" 
+            <Input
+              placeholder="(00) 00000-0000"
               onChange={handleTelefoneChange}
               maxLength={15}
             />
@@ -476,7 +522,7 @@ function Caixa({ isModalOpen, handleOk, handleCancel, tipo, dados }) {
           onFinish={onFinish}
         >
           <Form.Item
-            label="Alunos"
+            label="Aluno"
             name="alunosSelecionados"
             rules={[
               { required: true, message: "Por favor, selecione um aluno" },
@@ -484,23 +530,23 @@ function Caixa({ isModalOpen, handleOk, handleCancel, tipo, dados }) {
           >
             <CaixaSeletora
               options={alunos.map((aluno) => ({
-                label: aluno.nome,
+                label: `${aluno.nome} (${aluno.matricula || ""})`,
                 value: aluno.id,
               }))}
               placeholder="Selecione um aluno"
             />
           </Form.Item>
           <Form.Item
-            label="Livros"
+            label="Livro"
             name="livrosSelecionados"
             rules={[
               { required: true, message: "Por favor, selecione um livro" },
             ]}
           >
             <CaixaSeletora
-              options={livros.map((livros) => ({
-                label: livros.titulo,
-                value: livros.id,
+              options={livros.map((livro) => ({
+                label: `${livro.titulo} (${livro.isbn || ""})`,
+                value: livro.id,
               }))}
               placeholder="Selecione um livro"
             />

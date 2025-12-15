@@ -9,9 +9,9 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useState, useEffect } from "react";
-import AlunoDAO from "../daos/AlunosDAO.mjs";
-import AutoresDAO from "../daos/AutoresDAO.mjs";
-import EmprestimoDAO from "../daos/EmprestimoDAO.mjs";
+import AlunoDAOHibrido from "../daos/AlunoDAOHibrido.mjs";
+import AutoresDAOHibrido from "../daos/AutoresDAOHibrido.mjs";
+import EmprestimosDAOHibrido from "../daos/EmprestimosDAOHibrido.mjs";
 
 export default function Relatorio() {
   const [alunos, setAlunos] = useState([]);
@@ -25,9 +25,9 @@ export default function Relatorio() {
       setLoading(true);
 
       const [alunosData, autoresData, emprestimosData] = await Promise.all([
-        new AlunoDAO().carregarAlunos(),
-        new AutoresDAO().carregarAutores(),
-        new EmprestimoDAO().carregarEmprestimos(),
+        new AlunoDAOHibrido().carregarAlunos(),
+        new AutoresDAOHibrido().carregarAutores(),
+        new EmprestimosDAOHibrido().carregarEmprestimos(),
       ]);
 
       setAlunos(alunosData || []);
