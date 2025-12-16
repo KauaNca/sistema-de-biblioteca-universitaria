@@ -15,7 +15,7 @@ export default class LivrosDAOHibrido {
   // 🔹 Verifica se backend está disponível
   async verificarBackend() {
     try {
-      const response = await fetch(this.backendUrl, { method: "HEAD" });
+      const response = await fetch(this.backendUrl, { method: "GET" });
       this.backendAvailable = response.ok;
       return response.ok;
     } catch (error) {
@@ -141,6 +141,8 @@ export default class LivrosDAOHibrido {
 
   // 🔹 Atualiza livro
   async atualizarLivro(id, dados) {
+    console.log(id);
+    console.log(dados);
     const livroData = this.toBackendFormat(dados);
 
     // Tenta backend
@@ -189,7 +191,8 @@ export default class LivrosDAOHibrido {
       const livroAtualizado = {
         ...this.cache[index],
         ...livroData,
-        id: id,
+        autorNome: this.cache[index].autorNome,
+        id,
       };
 
       this.cache[index] = livroAtualizado;
@@ -341,59 +344,28 @@ export default class LivrosDAOHibrido {
   toBackendFormat(livro) {
     if (!livro) return {};
 
-    // Se já estiver no formato correto
-    if (livro.titulo) {
-      return {
-        titulo: livro.titulo,
-        isbn: livro.isbn || "",
-        autor: livro.autor || livro.autorId || null,
-        categoria: livro.categoria || "",
-        anoPublicacao: livro.ano || livro.anoPublicacao || null,
-        disponivel: livro.disponivel !== false,
-      };
-    }
-
-    // Se for instância da classe Livro
     return {
-      titulo: livro.getTitulo ? livro.getTitulo() : "",
-      isbn: livro.getIsbn ? livro.getIsbn() : "",
-      autor: livro.getAutorId ? livro.getAutorId() : null,
-      categoria: livro.getCategoria ? livro.getCategoria() : "",
-      anoPublicacao: livro.getAno ? livro.getAno() : null,
-      disponivel: livro.getDisponivel ? livro.getDisponivel() : true,
+      titulo: livro.titulo ?? livro.getTitulo?.(),
+      isbn: livro.isbn ?? livro.getIsbn?.() ?? "",
+      autor: livro.autor ?? livro.autorId ?? livro.getAutorId?.() ?? undefined,
+      categoria: livro.categoria ?? livro.getCategoria?.() ?? "",
+      anoPublicacao:
+        livro.ano ?? livro.anoPublicacao ?? livro.getAno?.() ?? null,
+      disponivel: livro.disponivel !== false,
     };
   }
 
   // 🔹 Mapeia dados
   mapLivro(livro) {
-    // Backend (MongoDB)
-    if (livro._id) {
-      return {
-        id: livro._id,
-        titulo: livro.titulo,
-        isbn: livro.isbn || "",
-        autorId: livro.autor?._id || livro.autor,
-        autorNome: livro.autor?.nome || "",
-        categoria: livro.categoria || "",
-        ano: livro.anoPublicacao || livro.ano || null,
-        disponivel: livro.disponivel !== false,
-        dataCadastro: livro.dataCadastro || new Date().toISOString(),
-        __v: livro.__v || 0,
-      };
-    }
-
-    // Local
     return {
-      id: livro.id,
+      id: livro._id || livro.id,
       titulo: livro.titulo,
       isbn: livro.isbn || "",
-      autorId: livro.autorId || livro.autor || null,
-      autorNome: livro.autorNome || "",
+      autorId: livro.autor?._id || livro.autor || null,
+      autorNome: livro.autor?.nome || "",
       categoria: livro.categoria || "",
-      ano: livro.ano || livro.anoPublicacao || null,
+      ano: livro.anoPublicacao || null,
       disponivel: livro.disponivel !== false,
-      dataCadastro: livro.dataCadastro || new Date().toISOString(),
-      __v: livro.__v || 0,
     };
   }
 
@@ -425,20 +397,16 @@ export default class LivrosDAOHibrido {
 
     try {
       for (const livroLocal of livrosLocaisNaoSincronizados) {
-        const livroParaEnviar = { ...livroLocal };
-        delete livroParaEnviar.id;
-        delete livroParaEnviar.autorNome;
+        const { id, autorNome, __v, dataCadastro, isLocal, ...livroLimpo } =
+          livroLocal;
 
-        // Converte autorId para autor (formato backend)
-        if (livroParaEnviar.autorId) {
-          livroParaEnviar.autor = livroParaEnviar.autorId;
-          delete livroParaEnviar.autorId;
-        }
+        livroLimpo.autor = livroLimpo.autorId;
+        delete livroLimpo.autorId;
 
         const response = await fetch(this.backendUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(livroParaEnviar),
+          body: JSON.stringify(livroLimpo),
         });
 
         if (response.ok) {

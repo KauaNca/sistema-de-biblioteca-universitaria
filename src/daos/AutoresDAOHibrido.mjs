@@ -15,7 +15,7 @@ export default class AutoresDAOHibrido {
   // 🔹 Verifica se backend está disponível
   async verificarBackend() {
     try {
-      const response = await fetch(this.backendUrl, { method: "HEAD" });
+      const response = await fetch(this.backendUrl, { method: "GET" });
       this.backendAvailable = response.ok;
       return response.ok;
     } catch (error) {
@@ -307,53 +307,22 @@ export default class AutoresDAOHibrido {
 
   // 🔹 Formato para backend
   toBackendFormat(autor) {
-    if (!autor) return {};
-
-    // Se já estiver no formato correto
-    if (autor.nome) {
-      return {
-        nome: autor.nome,
-        nacionalidade: autor.nacionalidade || "",
-        biografia: autor.biografia || "",
-        dataNascimento: autor.dataNascimento || null,
-      };
-    }
-
-    // Se for instância da classe Autor
     return {
-      nome: autor.getNome ? autor.getNome() : "",
-      nacionalidade: autor.getNacionalidade ? autor.getNacionalidade() : "",
-      biografia: autor.getBiografia ? autor.getBiografia() : "",
-      dataNascimento: autor.getDataNascimento
-        ? autor.getDataNascimento()
-        : null,
+      nome: autor.nome ?? autor.getNome?.(),
+      nacionalidade: autor.nacionalidade ?? autor.getNacionalidade?.(),
+      biografia: autor.biografia ?? autor.getBiografia?.(),
+      dataNascimento: autor.dataNascimento ?? null,
     };
   }
 
   // 🔹 Mapeia dados
   mapAutor(autor) {
-    // Backend (MongoDB)
-    if (autor._id) {
-      return {
-        id: autor._id,
-        nome: autor.nome,
-        nacionalidade: autor.nacionalidade || "",
-        biografia: autor.biografia || "",
-        dataNascimento: autor.dataNascimento || null,
-        livros: autor.livros || [],
-        __v: autor.__v || 0,
-      };
-    }
-
-    // Local
     return {
-      id: autor.id,
+      id: autor._id || autor.id,
       nome: autor.nome,
       nacionalidade: autor.nacionalidade || "",
       biografia: autor.biografia || "",
       dataNascimento: autor.dataNascimento || null,
-      livros: autor.livros || [],
-      __v: autor.__v || 0,
     };
   }
 
@@ -385,13 +354,13 @@ export default class AutoresDAOHibrido {
 
     try {
       for (const autorLocal of autoresLocaisNaoSincronizados) {
-        const autorParaEnviar = { ...autorLocal };
+        const { id, __v, livros, isLocal, ...autorLimpo } = autorLocal;
         delete autorParaEnviar.id;
 
         const response = await fetch(this.backendUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(autorParaEnviar),
+          body: JSON.stringify(autorLimpo),
         });
 
         if (response.ok) {

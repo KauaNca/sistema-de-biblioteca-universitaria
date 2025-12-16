@@ -120,7 +120,7 @@ function Caixa({ isModalOpen, handleOk, handleCancel, tipo, dados }) {
         ? aplicarMascaraTelefone(dados.telefone)
         : "";
       form.setFieldsValue({
-        nomeAluno: dados.nome,
+        nome: dados.nome,
         curso: dados.curso,
         email: dados.email,
         telefone: telefoneFormatado,
@@ -135,7 +135,7 @@ function Caixa({ isModalOpen, handleOk, handleCancel, tipo, dados }) {
   function editarAutor(values) {
     if (!dados) return;
     const autoresDAO = new AutoresDAOHibrido();
-    autoresDAO.atualizarAutores(dados.id, values).then((ok) => {
+    autoresDAO.atualizarAutor(dados.id, values).then((ok) => {
       if (!ok) console.error("Falha ao atualizar autor");
     });
   }
@@ -151,7 +151,7 @@ function Caixa({ isModalOpen, handleOk, handleCancel, tipo, dados }) {
     livro.setAno(values.ano);
     livro.setCategoria(values.categoria);
     livro.setAutorId(values.autorId);
-    livrosDAO.atualizarLivros(dados.id, livro).then((ok) => {
+    livrosDAO.atualizarLivro(dados.id, livro).then((ok) => {
       if (!ok) console.error("Falha ao atualizar livro");
     });
   }
@@ -207,7 +207,13 @@ function Caixa({ isModalOpen, handleOk, handleCancel, tipo, dados }) {
           novoLivro.setAno(values.ano);
           novoLivro.setCategoria(values.categoria);
           novoLivro.setAutorId(values.autorId || null);
-          const resposta = await livrosDAO.salvarLivro(novoLivro);
+
+          const dadosLivro = {
+            ...values,
+            autorId: values.autorId, // explícito
+          };
+
+          const resposta = await livrosDAO.salvarLivro(dadosLivro);
           if (!resposta) {
             message.error(
               "Falha ao salvar livro (Título ou ISBN pode já existir)"
@@ -234,7 +240,7 @@ function Caixa({ isModalOpen, handleOk, handleCancel, tipo, dados }) {
             : "";
 
           // campos do formulário de aluno: nomeAluno, curso, email, telefone
-          novoAluno.setNome(values.nomeAluno);
+          novoAluno.setNome(values.nome);
           novoAluno.setMatricula(gerarMatriculaSimples());
           if (values.curso) novoAluno.setCurso(values.curso);
           if (values.email) novoAluno.setEmail(values.email);
@@ -425,24 +431,16 @@ function Caixa({ isModalOpen, handleOk, handleCancel, tipo, dados }) {
           </Form.Item>
 
           <Form.Item
-            label="Autor"
             name="autorId"
-            rules={[
-              { required: true, message: "Por favor, selecione o autor!" },
-            ]}
+            label="Autor"
+            rules={[{ required: true, message: "Selecione um autor" }]}
           >
             <Select placeholder="Selecione o autor">
-              {autores.length === 0 ? (
-                <Option value={null} disabled>
-                  Nenhum autor cadastrado
-                </Option>
-              ) : (
-                autores.map((a) => (
-                  <Option key={a.id} value={a.id}>
-                    {a.nome}
-                  </Option>
-                ))
-              )}
+              {autores.map((autor) => (
+                <Select.Option key={autor.id} value={autor.id}>
+                  {autor.nome}
+                </Select.Option>
+              ))}
             </Select>
           </Form.Item>
         </Form>
@@ -457,7 +455,7 @@ function Caixa({ isModalOpen, handleOk, handleCancel, tipo, dados }) {
         >
           <Form.Item
             label="Nome do Aluno"
-            name="nomeAluno"
+            name="nome"
             rules={[
               { required: true, message: "Por favor, insira o nome do aluno!" },
             ]}

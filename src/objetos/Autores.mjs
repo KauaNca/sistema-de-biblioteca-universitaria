@@ -8,6 +8,10 @@ export default class Autores extends Pessoa {
   #obrasPublicadas;
   #ativo;
 
+  constructor() {
+    super();
+  }
+
   // Métodos
   setAutorId(id) {
     this.#autorId = id;
