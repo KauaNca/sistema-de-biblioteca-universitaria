@@ -4,7 +4,7 @@ export default class Livros {
     #ano;
     #isbn;
     #categoria;
-    #autorId;  // FK → vem de Autores
+    #autorId; 
   
     // --- LIVRO ID ---
     setLivroId(id) {
